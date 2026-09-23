@@ -4,7 +4,7 @@
 SET NAMES utf8mb4;
 
 CREATE TABLE IF NOT EXISTS cw_category (
-  category_id    bigint(20)      NOT NULL,
+  category_id    bigint(20)      NOT NULL AUTO_INCREMENT,
   parent_id      bigint(20)      DEFAULT 0                    COMMENT '父分类 ID',
   category_name  varchar(100)    NOT NULL                     COMMENT '分类名称',
   slug           varchar(100)    DEFAULT ''                   COMMENT '分类标识',
@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS cw_category (
   KEY idx_cw_category_parent (parent_id),
   KEY idx_cw_category_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Crowlook 作品分类';
+
+-- 兼容已经执行过旧版脚本的数据库，使后台新增分类可以取得自动生成的 ID。
+ALTER TABLE cw_category
+  MODIFY category_id bigint(20) NOT NULL AUTO_INCREMENT;
 
 CREATE TABLE IF NOT EXISTS cw_post (
   post_id          bigint(20)      NOT NULL AUTO_INCREMENT,
