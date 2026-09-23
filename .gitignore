@@ -1,0 +1,61 @@
+# Maven / Java build outputs
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Runtime data and logs
+logs/
+*.log
+*.log.*
+uploadPath/
+uploads/
+tmp/
+temp/
+
+# Local environment and machine-specific configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+application-local.yml
+application-local.yaml
+application-local.properties
+application-prod.yml
+application-prod.yaml
+application-prod.properties
+
+# Secrets, private keys, and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+secrets.*
+credentials.*
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# OS and temporary files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.tmp
+*.temp
+*~
+
