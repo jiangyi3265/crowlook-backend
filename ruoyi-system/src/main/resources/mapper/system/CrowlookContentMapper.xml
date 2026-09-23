@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CrowlookContentMapper">
+
+    <resultMap type="CrowlookCategory" id="CrowlookCategoryResult">
+        <id property="categoryId" column="category_id" />
+        <result property="parentId" column="parent_id" />
+        <result property="categoryName" column="category_name" />
+        <result property="slug" column="slug" />
+        <result property="icon" column="icon" />
+        <result property="coverUrl" column="cover_url" />
+        <result property="videoUrl" column="video_url" />
+        <result property="posterUrl" column="poster_url" />
+        <result property="headingImage" column="heading_image" />
+        <result property="sortOrder" column="sort_order" />
+        <result property="status" column="status" />
+        <result property="articleStyle" column="article_style" />
+        <result property="hidden" column="hidden" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectCategoryVo">
+        select category_id, parent_id, category_name, slug, icon, cover_url, video_url, poster_url,
+               heading_image, sort_order, status, article_style, hidden,
+               create_by, create_time, update_by, update_time, remark
+        from cw_category
+    </sql>
+
+    <select id="selectCategoryList" parameterType="CrowlookCategory" resultMap="CrowlookCategoryResult">
+        <include refid="selectCategoryVo" />
+        <where>
+            <if test="categoryName != null and categoryName != ''">and category_name like concat('%', #{categoryName}, '%')</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+            <if test="parentId != null">and parent_id = #{parentId}</if>
+        </where>
+        order by sort_order asc, category_id asc
+    </select>
+
+    <select id="selectPublishedCategories" resultMap="CrowlookCategoryResult">
+        <include refid="selectCategoryVo" /> where status = '0'
+        order by sort_order asc, category_id asc
+    </select>
+
+    <select id="selectCategoryById" parameterType="Long" resultMap="CrowlookCategoryResult">
+        <include refid="selectCategoryVo" /> where category_id = #{categoryId}
+    </select>
+
+    <insert id="insertCategory" parameterType="CrowlookCategory" useGeneratedKeys="true" keyProperty="categoryId">
+        insert into cw_category(parent_id, category_name, slug, icon, cover_url, video_url, poster_url,
+            heading_image, sort_order, status, article_style, hidden, create_by, create_time, remark)
+        values(#{parentId}, #{categoryName}, #{slug}, #{icon}, #{coverUrl}, #{videoUrl}, #{posterUrl},
+            #{headingImage}, #{sortOrder}, #{status}, #{articleStyle}, #{hidden}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateCategory" parameterType="CrowlookCategory">
+        update cw_category set parent_id=#{parentId}, category_name=#{categoryName}, slug=#{slug},
+            icon=#{icon}, cover_url=#{coverUrl}, video_url=#{videoUrl}, poster_url=#{posterUrl},
+            heading_image=#{headingImage}, sort_order=#{sortOrder}, status=#{status},
+            article_style=#{articleStyle}, hidden=#{hidden}, update_by=#{updateBy}, update_time=sysdate(), remark=#{remark}
+        where category_id=#{categoryId}
+    </update>
+
+    <insert id="upsertCategory" parameterType="CrowlookCategory">
+        insert into cw_category(category_id, parent_id, category_name, slug, icon, cover_url, video_url,
+            poster_url, heading_image, sort_order, status, article_style, hidden, create_by, create_time, remark)
+        values(#{categoryId}, #{parentId}, #{categoryName}, #{slug}, #{icon}, #{coverUrl}, #{videoUrl},
+            #{posterUrl}, #{headingImage}, #{sortOrder}, #{status}, #{articleStyle}, #{hidden}, #{createBy}, sysdate(), #{remark})
+        on duplicate key update parent_id=values(parent_id), category_name=values(category_name),
+            slug=values(slug), icon=values(icon), cover_url=values(cover_url), video_url=values(video_url),
+            poster_url=values(poster_url), heading_image=values(heading_image), sort_order=values(sort_order),
+            status=values(status), article_style=values(article_style), hidden=values(hidden),
+            update_by=values(create_by), update_time=sysdate()
+    </insert>
+
+    <delete id="deleteCategoryByIds" parameterType="Long">
+        delete from cw_category where category_id in
+        <foreach item="categoryId" collection="array" open="(" separator="," close=")">#{categoryId}</foreach>
+    </delete>
+
+    <select id="countCategoryChildren" parameterType="Long" resultType="int">
+        select count(1) from cw_category where parent_id = #{categoryId}
+    </select>
+
+    <select id="countCategoryPosts" parameterType="Long" resultType="int">
+        select count(1) from cw_post where category_id = #{categoryId} or find_in_set(#{categoryId}, category_ids)
+    </select>
+
+    <resultMap type="CrowlookPost" id="CrowlookPostResult">
+        <id property="postId" column="post_id" />
+        <result property="postTitle" column="post_title" />
+        <result property="slug" column="slug" />
+        <result property="excerpt" column="excerpt" />
+        <result property="thumbnail" column="thumbnail" />
+        <result property="format" column="format" />
+        <result property="formatContent" column="format_content" />
+        <result property="categoryId" column="category_id" />
+        <result property="categoryIds" column="category_ids" />
+        <result property="categoryName" column="category_name" />
+        <result property="content" column="content" />
+        <result property="status" column="status" />
+        <result property="featured" column="featured" />
+        <result property="sortOrder" column="sort_order" />
+        <result property="views" column="views" />
+        <result property="favoriteCount" column="favorite_count" />
+        <result property="commentCount" column="comment_count" />
+        <result property="mode" column="mode" />
+        <result property="style" column="style" />
+        <result property="publishTime" column="publish_time" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectPostVo">
+        select p.post_id, p.post_title, p.slug, p.excerpt, p.thumbnail, p.format,
+               cast(p.format_content as char) format_content, p.category_id, p.category_ids,
+               c.category_name, cast(p.content as char) content, p.status, p.featured, p.sort_order,
+               p.views, p.favorite_count,
+               (select count(1) from cw_comment cm where cm.post_id=p.post_id and cm.status='1') comment_count,
+               p.mode, p.style, p.publish_time, p.create_by, p.create_time, p.update_by, p.update_time, p.remark
+        from cw_post p left join cw_category c on c.category_id=p.category_id
+    </sql>
+
+    <select id="selectPostList" parameterType="CrowlookPost" resultMap="CrowlookPostResult">
+        <include refid="selectPostVo" />
+        <where>
+            <if test="postTitle != null and postTitle != ''">and p.post_title like concat('%', #{postTitle}, '%')</if>
+            <if test="categoryId != null">and (p.category_id=#{categoryId} or find_in_set(#{categoryId}, p.category_ids))</if>
+            <if test="format != null and format != ''">and p.format=#{format}</if>
+            <if test="status != null and status != ''">and p.status=#{status}</if>
+        </where>
+        order by p.featured desc, p.sort_order asc, p.publish_time desc, p.post_id desc
+    </select>
+
+    <select id="selectPostById" parameterType="Long" resultMap="CrowlookPostResult">
+        <include refid="selectPostVo" /> where p.post_id=#{postId}
+    </select>
+
+    <insert id="insertPost" parameterType="CrowlookPost" useGeneratedKeys="true" keyProperty="postId">
+        insert into cw_post(post_title, slug, excerpt, thumbnail, format, format_content, category_id,
+            category_ids, content, status, featured, sort_order, views, favorite_count, mode, style,
+            publish_time, create_by, create_time, remark)
+        values(#{postTitle}, #{slug}, #{excerpt}, #{thumbnail}, #{format}, #{formatContent}, #{categoryId},
+            #{categoryIds}, #{content}, #{status}, #{featured}, #{sortOrder}, #{views}, #{favoriteCount},
+            #{mode}, #{style}, coalesce(#{publishTime}, sysdate()), #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updatePost" parameterType="CrowlookPost">
+        update cw_post set post_title=#{postTitle}, slug=#{slug}, excerpt=#{excerpt}, thumbnail=#{thumbnail},
+            format=#{format}, format_content=#{formatContent}, category_id=#{categoryId}, category_ids=#{categoryIds},
+            content=#{content}, status=#{status}, featured=#{featured}, sort_order=#{sortOrder}, views=#{views},
+            favorite_count=#{favoriteCount}, mode=#{mode}, style=#{style}, publish_time=#{publishTime},
+            update_by=#{updateBy}, update_time=sysdate(), remark=#{remark}
+        where post_id=#{postId}
+    </update>
+
+    <insert id="upsertPost" parameterType="CrowlookPost">
+        insert into cw_post(post_id, post_title, slug, excerpt, thumbnail, format, format_content, category_id,
+            category_ids, content, status, featured, sort_order, views, favorite_count, mode, style,
+            publish_time, create_by, create_time, remark)
+        values(#{postId}, #{postTitle}, #{slug}, #{excerpt}, #{thumbnail}, #{format}, #{formatContent}, #{categoryId},
+            #{categoryIds}, #{content}, #{status}, #{featured}, #{sortOrder}, #{views}, #{favoriteCount},
+            #{mode}, #{style}, coalesce(#{publishTime}, sysdate()), #{createBy}, sysdate(), #{remark})
+        on duplicate key update post_title=values(post_title), slug=values(slug), excerpt=values(excerpt),
+            thumbnail=values(thumbnail), format=values(format), format_content=values(format_content),
+            category_id=values(category_id), category_ids=values(category_ids), content=values(content),
+            status=values(status), featured=values(featured), sort_order=values(sort_order), views=values(views),
+            favorite_count=values(favorite_count), mode=values(mode), style=values(style),
+            publish_time=values(publish_time), update_by=values(create_by), update_time=sysdate()
+    </insert>
+
+    <delete id="deletePostByIds" parameterType="Long">
+        delete from cw_post where post_id in
+        <foreach item="postId" collection="array" open="(" separator="," close=")">#{postId}</foreach>
+    </delete>
+
+    <delete id="deleteCommentsByPostIds" parameterType="Long">
+        delete from cw_comment where post_id in
+        <foreach item="postId" collection="array" open="(" separator="," close=")">#{postId}</foreach>
+    </delete>
+
+    <update id="incrementPostViews" parameterType="Long">
+        update cw_post set views=views+1 where post_id=#{postId} and status='0'
+    </update>
+
+    <select id="selectPublicPosts" resultMap="CrowlookPostResult">
+        <include refid="selectPostVo" />
+        where p.status='0'
+        <if test="categoryId != null">and (p.category_id=#{categoryId} or find_in_set(#{categoryId}, p.category_ids))</if>
+        <if test="keyword != null and keyword != ''">and (p.post_title like concat('%', #{keyword}, '%') or p.excerpt like concat('%', #{keyword}, '%'))</if>
+        order by p.featured desc, p.sort_order asc, p.publish_time desc, p.post_id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="countPublicPosts" resultType="long">
+        select count(1) from cw_post p where p.status='0'
+        <if test="categoryId != null">and (p.category_id=#{categoryId} or find_in_set(#{categoryId}, p.category_ids))</if>
+        <if test="keyword != null and keyword != ''">and (p.post_title like concat('%', #{keyword}, '%') or p.excerpt like concat('%', #{keyword}, '%'))</if>
+    </select>
+
+    <select id="selectRelatedPosts" resultMap="CrowlookPostResult">
+        <include refid="selectPostVo" />
+        where p.status='0' and p.post_id&lt;&gt;#{postId}
+        <if test="categoryId != null">and (p.category_id=#{categoryId} or find_in_set(#{categoryId}, p.category_ids))</if>
+        order by p.featured desc, p.publish_time desc limit #{limit}
+    </select>
+
+    <resultMap type="CrowlookPage" id="CrowlookPageResult">
+        <id property="pageId" column="page_id" />
+        <result property="pageKey" column="page_key" />
+        <result property="pageTitle" column="page_title" />
+        <result property="pageName" column="page_name" />
+        <result property="slug" column="slug" />
+        <result property="modulesJson" column="modules_json" />
+        <result property="configJson" column="config_json" />
+        <result property="backgroundColor" column="background_color" />
+        <result property="backgroundImage" column="background_image" />
+        <result property="status" column="status" />
+        <result property="sortOrder" column="sort_order" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectPageVo">
+        select page_id, page_key, page_title, page_name, slug, cast(modules_json as char) modules_json,
+               cast(config_json as char) config_json, background_color, background_image, status, sort_order,
+               create_by, create_time, update_by, update_time, remark from cw_page
+    </sql>
+
+    <select id="selectPageList" parameterType="CrowlookPage" resultMap="CrowlookPageResult">
+        <include refid="selectPageVo" />
+        <where>
+            <if test="pageTitle != null and pageTitle != ''">and page_title like concat('%', #{pageTitle}, '%')</if>
+            <if test="pageKey != null and pageKey != ''">and page_key like concat('%', #{pageKey}, '%')</if>
+            <if test="status != null and status != ''">and status=#{status}</if>
+        </where>
+        order by sort_order asc, page_id asc
+    </select>
+
+    <select id="selectPageById" parameterType="Long" resultMap="CrowlookPageResult">
+        <include refid="selectPageVo" /> where page_id=#{pageId}
+    </select>
+
+    <select id="selectPublishedPage" resultMap="CrowlookPageResult">
+        <include refid="selectPageVo" /> where status='0'
+        <choose>
+            <when test="pageId != null">and page_id=#{pageId}</when>
+            <otherwise>and page_key=#{pageKey}</otherwise>
+        </choose>
+        limit 1
+    </select>
+
+    <insert id="insertPage" parameterType="CrowlookPage" useGeneratedKeys="true" keyProperty="pageId">
+        insert into cw_page(page_key, page_title, page_name, slug, modules_json, config_json, background_color,
+            background_image, status, sort_order, create_by, create_time, remark)
+        values(#{pageKey}, #{pageTitle}, #{pageName}, #{slug}, #{modulesJson}, #{configJson}, #{backgroundColor},
+            #{backgroundImage}, #{status}, #{sortOrder}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updatePage" parameterType="CrowlookPage">
+        update cw_page set page_key=#{pageKey}, page_title=#{pageTitle}, page_name=#{pageName}, slug=#{slug},
+            modules_json=#{modulesJson}, config_json=#{configJson}, background_color=#{backgroundColor},
+            background_image=#{backgroundImage}, status=#{status}, sort_order=#{sortOrder},
+            update_by=#{updateBy}, update_time=sysdate(), remark=#{remark}
+        where page_id=#{pageId}
+    </update>
+
+    <insert id="upsertPage" parameterType="CrowlookPage">
+        insert into cw_page(page_id, page_key, page_title, page_name, slug, modules_json, config_json,
+            background_color, background_image, status, sort_order, create_by, create_time, remark)
+        values(#{pageId}, #{pageKey}, #{pageTitle}, #{pageName}, #{slug}, #{modulesJson}, #{configJson},
+            #{backgroundColor}, #{backgroundImage}, #{status}, #{sortOrder}, #{createBy}, sysdate(), #{remark})
+        on duplicate key update page_key=values(page_key), page_title=values(page_title), page_name=values(page_name),
+            slug=values(slug), modules_json=values(modules_json), config_json=values(config_json),
+            background_color=values(background_color), background_image=values(background_image),
+            status=values(status), sort_order=values(sort_order), update_by=values(create_by), update_time=sysdate()
+    </insert>
+
+    <delete id="deletePageByIds" parameterType="Long">
+        delete from cw_page where page_id in
+        <foreach item="pageId" collection="array" open="(" separator="," close=")">#{pageId}</foreach>
+    </delete>
+
+    <resultMap type="CrowlookComment" id="CrowlookCommentResult">
+        <id property="commentId" column="comment_id" />
+        <result property="postId" column="post_id" />
+        <result property="postTitle" column="post_title" />
+        <result property="parentId" column="parent_id" />
+        <result property="nickname" column="nickname" />
+        <result property="avatar" column="avatar" />
+        <result property="content" column="content" />
+        <result property="status" column="status" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectCommentVo">
+        select cm.comment_id, cm.post_id, p.post_title, cm.parent_id, cm.nickname, cm.avatar,
+               cast(cm.content as char) content, cm.status, cm.create_by, cm.create_time,
+               cm.update_by, cm.update_time, cm.remark
+        from cw_comment cm left join cw_post p on p.post_id=cm.post_id
+    </sql>
+
+    <select id="selectCommentList" parameterType="CrowlookComment" resultMap="CrowlookCommentResult">
+        <include refid="selectCommentVo" />
+        <where>
+            <if test="postId != null">and cm.post_id=#{postId}</if>
+            <if test="nickname != null and nickname != ''">and cm.nickname like concat('%', #{nickname}, '%')</if>
+            <if test="status != null and status != ''">and cm.status=#{status}</if>
+        </where>
+        order by cm.create_time desc, cm.comment_id desc
+    </select>
+
+    <select id="selectApprovedComments" parameterType="Long" resultMap="CrowlookCommentResult">
+        <include refid="selectCommentVo" /> where cm.post_id=#{postId} and cm.status='1'
+        order by cm.create_time asc, cm.comment_id asc
+    </select>
+
+    <select id="selectCommentById" parameterType="Long" resultMap="CrowlookCommentResult">
+        <include refid="selectCommentVo" /> where cm.comment_id=#{commentId}
+    </select>
+
+    <insert id="insertComment" parameterType="CrowlookComment" useGeneratedKeys="true" keyProperty="commentId">
+        insert into cw_comment(post_id, parent_id, nickname, avatar, content, status, create_by, create_time, remark)
+        values(#{postId}, #{parentId}, #{nickname}, #{avatar}, #{content}, #{status}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateComment" parameterType="CrowlookComment">
+        update cw_comment set post_id=#{postId}, parent_id=#{parentId}, nickname=#{nickname}, avatar=#{avatar},
+            content=#{content}, status=#{status}, update_by=#{updateBy}, update_time=sysdate(), remark=#{remark}
+        where comment_id=#{commentId}
+    </update>
+
+    <insert id="upsertComment" parameterType="CrowlookComment">
+        insert into cw_comment(comment_id, post_id, parent_id, nickname, avatar, content, status, create_by, create_time, remark)
+        values(#{commentId}, #{postId}, #{parentId}, #{nickname}, #{avatar}, #{content}, #{status}, #{createBy},
+            coalesce(#{createTime}, sysdate()), #{remark})
+        on duplicate key update post_id=values(post_id), parent_id=values(parent_id), nickname=values(nickname),
+            avatar=values(avatar), content=values(content), status=values(status), update_by=values(create_by), update_time=sysdate()
+    </insert>
+
+    <delete id="deleteCommentByIds" parameterType="Long">
+        delete from cw_comment where comment_id in
+        <foreach item="commentId" collection="array" open="(" separator="," close=")">#{commentId}</foreach>
+    </delete>
+
+    <select id="selectOverview" resultType="map">
+        select
+            (select count(1) from cw_post where status='0') publishedPosts,
+            (select count(1) from cw_post where status='1') draftPosts,
+            (select count(1) from cw_category where status='0') categories,
+            (select count(1) from cw_page where status='0') publishedPages,
+            (select count(1) from cw_comment where status='0') pendingComments
+    </select>
+</mapper>
