@@ -109,6 +109,7 @@ public class CrowlookContentServiceImpl implements ICrowlookContentService
     public int deletePostByIds(Long[] postIds)
     {
         mapper.deleteCommentsByPostIds(postIds);
+        mapper.deleteFavoritesByPostIds(postIds);
         return mapper.deletePostByIds(postIds);
     }
 
@@ -161,6 +162,11 @@ public class CrowlookContentServiceImpl implements ICrowlookContentService
     {
         if (blank(comment.getStatus())) comment.setStatus("0");
         if (blank(comment.getNickname())) comment.setNickname("微信用户");
+        if (comment.getPostId() != null && comment.getParentId() != null && comment.getParentId() > 0)
+        {
+            CrowlookComment parent = mapper.selectCommentById(comment.getParentId());
+            if (parent == null || !comment.getPostId().equals(parent.getPostId())) comment.setParentId(0L);
+        }
         return mapper.insertComment(comment);
     }
 
@@ -182,6 +188,35 @@ public class CrowlookContentServiceImpl implements ICrowlookContentService
     {
         Map<String, Object> overview = mapper.selectOverview();
         return overview == null ? new LinkedHashMap<>() : overview;
+    }
+
+    @Override
+    public Map<String, Object> getSiteSettings()
+    {
+        CrowlookPage page = mapper.selectPageByKey("discovery");
+        if (page == null) throw new ServiceException("作品页尚未初始化，无法读取用户端设置");
+        Map<String, Object> config = asMap(parseJson(page.getConfigJson(), new LinkedHashMap<>()));
+        Map<String, Object> settings = asMap(config.get("ilank"));
+        return new LinkedHashMap<>(settings);
+    }
+
+    @Override
+    @Transactional
+    public int updateSiteSettings(Map<String, Object> settings, String username)
+    {
+        CrowlookPage page = mapper.selectPageByKey("discovery");
+        if (page == null) throw new ServiceException("作品页尚未初始化，无法保存用户端设置");
+        Map<String, Object> config = asMap(parseJson(page.getConfigJson(), new LinkedHashMap<>()));
+        Map<String, Object> current = new LinkedHashMap<>(asMap(config.get("ilank")));
+        String[] allowed = { "site_name", "site_slogan", "site_wx", "site_form", "site_add",
+                "site_comment", "site_kf", "site_wxkf", "site_tab", "copyright_text", "share_base",
+                "profile_name", "home_image", "home_caption", "home_statement_cn", "home_statement_en" };
+        for (String key : allowed)
+        {
+            if (settings.containsKey(key)) current.put(key, settings.get(key));
+        }
+        config.put("ilank", current);
+        return mapper.updatePageConfig(page.getPageId(), json(config, "{}"), username);
     }
 
     @Override
@@ -321,9 +356,26 @@ public class CrowlookContentServiceImpl implements ICrowlookContentService
         Map<String, Object> response = ok();
         response.put("page_title", page.getPageTitle());
         response.put("module_page", modulePage);
-        response.put("modules", parseJson(page.getModulesJson(), new ArrayList<>()));
+        List<Object> modules = asList(parseJson(page.getModulesJson(), new ArrayList<>()));
+        hydratePostModules(modules);
+        response.put("modules", modules);
         Object config = parseJson(page.getConfigJson(), new LinkedHashMap<>());
         if (config instanceof Map && !asMap(config).isEmpty()) response.put("config", config);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> setPublicFavorite(Long postId, String deviceKey, boolean active)
+    {
+        CrowlookPost post = mapper.selectPostById(postId);
+        if (post == null || !"0".equals(post.getStatus())) return notFound("作品不存在或尚未发布");
+        int changed = active ? mapper.insertFavorite(postId, deviceKey) : mapper.deleteFavorite(postId, deviceKey);
+        if (changed > 0) mapper.changePostFavoriteCount(postId, active ? 1 : -1);
+        CrowlookPost updated = mapper.selectPostById(postId);
+        Map<String, Object> response = ok();
+        response.put("active", active);
+        response.put("favorite_count", updated == null || updated.getFavoriteCount() == null ? 0 : updated.getFavoriteCount());
         return response;
     }
 
@@ -575,6 +627,24 @@ public class CrowlookContentServiceImpl implements ICrowlookContentService
         return item;
     }
 
+    private void hydratePostModules(List<Object> modules)
+    {
+        for (Object value : modules)
+        {
+            Map<String, Object> module = asMap(value);
+            if (!"post".equals(text(module.get("type")))) continue;
+            Map<String, Object> setting = asMap(module.get("setting"));
+            Long categoryId = number(setting.get("cat"));
+            int limit = Math.max(1, Math.min(defaultInt(setting.get("number"), 6), 30));
+            List<CrowlookPost> posts = mapper.selectPublicPosts(categoryId, null, 0, limit);
+            module.put("content", posts.stream().map(this::postSummary).collect(Collectors.toList()));
+            long total = mapper.countPublicPosts(categoryId, null);
+            setting.put("total_pages", total == 0 ? 0 : (int) Math.ceil(total / (double) limit));
+            setting.put("next_cursor", 0);
+            module.put("setting", setting);
+        }
+    }
+
     private Map<String, Object> commentMap(CrowlookComment comment)
     {
         Map<String, Object> item = new LinkedHashMap<>();
@@ -582,6 +652,8 @@ public class CrowlookContentServiceImpl implements ICrowlookContentService
         item.put("nickname", comment.getNickname());
         item.put("avatar", comment.getAvatar());
         item.put("content", comment.getContent());
+        item.put("parent", comment.getParentId() == null ? 0 : comment.getParentId());
+        item.put("reply_to", comment.getParentNickname());
         item.put("timestamp", comment.getCreateTime() == null ? 0 : comment.getCreateTime().getTime() / 1000);
         return item;
     }

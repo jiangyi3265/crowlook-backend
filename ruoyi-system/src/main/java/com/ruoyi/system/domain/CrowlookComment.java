@@ -12,6 +12,7 @@ public class CrowlookComment extends BaseEntity
     private Long postId;
     private String postTitle;
     private Long parentId;
+    private String parentNickname;
     private String nickname;
     private String avatar;
     private String content;
@@ -25,6 +26,8 @@ public class CrowlookComment extends BaseEntity
     public void setPostTitle(String postTitle) { this.postTitle = postTitle; }
     public Long getParentId() { return parentId; }
     public void setParentId(Long parentId) { this.parentId = parentId; }
+    public String getParentNickname() { return parentNickname; }
+    public void setParentNickname(String parentNickname) { this.parentNickname = parentNickname; }
     public String getNickname() { return nickname; }
     public void setNickname(String nickname) { this.nickname = nickname; }
     public String getAvatar() { return avatar; }

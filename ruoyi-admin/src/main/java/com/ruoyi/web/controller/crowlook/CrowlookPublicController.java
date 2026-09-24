@@ -77,4 +77,20 @@ public class CrowlookPublicController
         response.put("message", "评论已提交，审核通过后显示");
         return response;
     }
+
+    @PostMapping("/post/favorite.json")
+    public Map<String, Object> favorite(@RequestBody Map<String, Object> body)
+    {
+        Long postId = body.get("postId") instanceof Number ? ((Number) body.get("postId")).longValue() : null;
+        String deviceKey = body.get("deviceKey") == null ? "" : String.valueOf(body.get("deviceKey")).trim();
+        boolean active = Boolean.TRUE.equals(body.get("active")) || "true".equalsIgnoreCase(String.valueOf(body.get("active")));
+        if (postId == null || !deviceKey.matches("[A-Za-z0-9_-]{8,80}"))
+        {
+            Map<String, Object> error = new LinkedHashMap<>();
+            error.put("errcode", 400);
+            error.put("message", "点赞请求无效");
+            return error;
+        }
+        return contentService.setPublicFavorite(postId, deviceKey, active);
+    }
 }

@@ -102,6 +102,14 @@ CREATE TABLE IF NOT EXISTS cw_comment (
   KEY idx_cw_comment_created (create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Crowlook 作品评论';
 
+CREATE TABLE IF NOT EXISTS cw_favorite (
+  post_id       bigint(20)   NOT NULL                    COMMENT '作品 ID',
+  device_key    varchar(80)  NOT NULL                    COMMENT '匿名设备标识',
+  create_time   datetime     DEFAULT NULL,
+  PRIMARY KEY (post_id, device_key),
+  KEY idx_cw_favorite_created (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Crowlook 用户端点赞记录';
+
 -- 用户端现有分类。使用可重复执行的写法，不覆盖后台已经维护过的数据。
 INSERT IGNORE INTO cw_category
   (category_id, parent_id, category_name, slug, sort_order, status, article_style, create_by, create_time)
@@ -141,7 +149,8 @@ INSERT IGNORE INTO sys_menu VALUES
   (2001, '作品管理', 2000, 1, 'post', 'crowlook/post/index', '', 'CrowlookPost', 1, 0, 'C', '0', '0', 'crowlook:post:list', 'documentation', 'admin', NOW(), '', NULL, ''),
   (2002, '分类管理', 2000, 2, 'category', 'crowlook/category/index', '', 'CrowlookCategory', 1, 0, 'C', '0', '0', 'crowlook:category:list', 'tree-table', 'admin', NOW(), '', NULL, ''),
   (2003, '页面装修', 2000, 3, 'page', 'crowlook/page/index', '', 'CrowlookPage', 1, 0, 'C', '0', '0', 'crowlook:page:list', 'edit', 'admin', NOW(), '', NULL, ''),
-  (2004, '评论中心', 2000, 4, 'comment', 'crowlook/comment/index', '', 'CrowlookComment', 1, 0, 'C', '0', '0', 'crowlook:comment:list', 'message', 'admin', NOW(), '', NULL, '');
+  (2004, '评论中心', 2000, 4, 'comment', 'crowlook/comment/index', '', 'CrowlookComment', 1, 0, 'C', '0', '0', 'crowlook:comment:list', 'message', 'admin', NOW(), '', NULL, ''),
+  (2005, '用户端设置', 2000, 5, 'settings', 'crowlook/settings/index', '', 'CrowlookSettings', 1, 0, 'C', '0', '0', 'crowlook:settings:list', 'tool', 'admin', NOW(), '', NULL, '');
 
 INSERT IGNORE INTO sys_menu VALUES
   (2101, '作品查询', 2001, 1, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:post:query', '#', 'admin', NOW(), '', NULL, ''),
@@ -159,4 +168,6 @@ INSERT IGNORE INTO sys_menu VALUES
   (2125, '快照导入', 2003, 5, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:page:import', '#', 'admin', NOW(), '', NULL, ''),
   (2131, '评论查询', 2004, 1, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:comment:query', '#', 'admin', NOW(), '', NULL, ''),
   (2132, '评论审核', 2004, 2, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:comment:edit', '#', 'admin', NOW(), '', NULL, ''),
-  (2133, '评论删除', 2004, 3, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:comment:remove', '#', 'admin', NOW(), '', NULL, '');
+  (2133, '评论删除', 2004, 3, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:comment:remove', '#', 'admin', NOW(), '', NULL, ''),
+  (2141, '设置查询', 2005, 1, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:settings:list', '#', 'admin', NOW(), '', NULL, ''),
+  (2142, '设置修改', 2005, 2, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:settings:edit', '#', 'admin', NOW(), '', NULL, '');

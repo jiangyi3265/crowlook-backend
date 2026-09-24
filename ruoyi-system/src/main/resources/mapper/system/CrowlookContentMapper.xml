@@ -43,7 +43,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectPublishedCategories" resultMap="CrowlookCategoryResult">
-        <include refid="selectCategoryVo" /> where status = '0'
+        <include refid="selectCategoryVo" /> where status = '0' and hidden = 0
         order by sort_order asc, category_id asc
     </select>
 
@@ -252,6 +252,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectPageVo" /> where page_id=#{pageId}
     </select>
 
+    <select id="selectPageByKey" parameterType="String" resultMap="CrowlookPageResult">
+        <include refid="selectPageVo" /> where page_key=#{pageKey} limit 1
+    </select>
+
     <select id="selectPublishedPage" resultMap="CrowlookPageResult">
         <include refid="selectPageVo" /> where status='0'
         <choose>
@@ -276,6 +280,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where page_id=#{pageId}
     </update>
 
+    <update id="updatePageConfig">
+        update cw_page set config_json=#{configJson}, update_by=#{username}, update_time=sysdate()
+        where page_id=#{pageId}
+    </update>
+
     <insert id="upsertPage" parameterType="CrowlookPage">
         insert into cw_page(page_id, page_key, page_title, page_name, slug, modules_json, config_json,
             background_color, background_image, status, sort_order, create_by, create_time, remark)
@@ -297,6 +306,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="postId" column="post_id" />
         <result property="postTitle" column="post_title" />
         <result property="parentId" column="parent_id" />
+        <result property="parentNickname" column="parent_nickname" />
         <result property="nickname" column="nickname" />
         <result property="avatar" column="avatar" />
         <result property="content" column="content" />
@@ -309,10 +319,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectCommentVo">
-        select cm.comment_id, cm.post_id, p.post_title, cm.parent_id, cm.nickname, cm.avatar,
+        select cm.comment_id, cm.post_id, p.post_title, cm.parent_id, parent.nickname parent_nickname, cm.nickname, cm.avatar,
                cast(cm.content as char) content, cm.status, cm.create_by, cm.create_time,
                cm.update_by, cm.update_time, cm.remark
-        from cw_comment cm left join cw_post p on p.post_id=cm.post_id
+        from cw_comment cm
+        left join cw_post p on p.post_id=cm.post_id
+        left join cw_comment parent on parent.comment_id=cm.parent_id
     </sql>
 
     <select id="selectCommentList" parameterType="CrowlookComment" resultMap="CrowlookCommentResult">
@@ -363,12 +375,32 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <foreach item="commentId" collection="array" open="(" separator="," close=")">#{commentId}</foreach>
     </delete>
 
+    <insert id="insertFavorite">
+        insert ignore into cw_favorite(post_id, device_key, create_time)
+        values(#{postId}, #{deviceKey}, sysdate())
+    </insert>
+
+    <delete id="deleteFavorite">
+        delete from cw_favorite where post_id=#{postId} and device_key=#{deviceKey}
+    </delete>
+
+    <update id="changePostFavoriteCount">
+        update cw_post set favorite_count=greatest(coalesce(favorite_count, 0) + #{delta}, 0)
+        where post_id=#{postId}
+    </update>
+
+    <delete id="deleteFavoritesByPostIds" parameterType="Long">
+        delete from cw_favorite where post_id in
+        <foreach item="postId" collection="array" open="(" separator="," close=")">#{postId}</foreach>
+    </delete>
+
     <select id="selectOverview" resultType="map">
         select
             (select count(1) from cw_post where status='0') publishedPosts,
             (select count(1) from cw_post where status='1') draftPosts,
             (select count(1) from cw_category where status='0') categories,
             (select count(1) from cw_page where status='0') publishedPages,
-            (select count(1) from cw_comment where status='0') pendingComments
+            (select count(1) from cw_comment where status='0') pendingComments,
+            (select coalesce(sum(favorite_count), 0) from cw_post) totalFavorites
     </select>
 </mapper>

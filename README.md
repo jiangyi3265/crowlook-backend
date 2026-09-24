@@ -4,7 +4,7 @@ Crowlook 项目的统一后端服务，为管理后台和用户端提供内容�
 
 ## 项目简介
 
-本仓库基于 RuoYi-Vue 3.9.1 的 Java 后端整理而成，已将旧版内置 Vue 2 前端拆出，并实现 Crowlook 内容中台。管理端可维护作品、分类、首页/发现页/品牌页模块与评论审核；用户端通过匿名公开 API 获取已发布内容、提交待审核评论。系统同时保留登录鉴权、用户/角色/菜单、字典、日志、服务监控和缓存监控等后台基础能力。
+本仓库基于 RuoYi-Vue 3.9.1 的 Java 后端整理而成，已将旧版内置 Vue 2 前端拆出，并实现 Crowlook 内容中台。管理端可维护作品、分类、首页/发现页/品牌页模块、评论审核以及用户端通用设置；用户端通过匿名公开 API 获取已发布内容、提交评论回复并同步点赞统计。页面中的作品模块会实时查询数据库，不再依赖导入时的静态列表。系统同时保留登录鉴权、用户/角色/菜单、字典、日志、服务监控和缓存监控等后台基础能力。
 
 后端配置中的数据库密码、Redis 密码、JWT 密钥和 Druid 控制台密码均通过环境变量注入，不在仓库中保存真实凭据。
 
@@ -55,15 +55,17 @@ java -jar ruoyi-admin/target/ruoyi-admin.jar
 - `GET /api/category/list.json`：分类树
 - `GET /api/post/list.json`、`GET /api/post/get.json`：作品列表与详情
 - `POST /api/post/comment.json`：用户端提交评论，默认进入待审核状态
+- `POST /api/post/favorite.json`：匿名设备幂等点赞或取消点赞
+- `GET/PUT /crowlook/settings`：管理品牌、首页、客服、预约、搜索与门店设置
 
-首次启动后，可在 `crowlook-admin` 的“页面编排”中导入 `crowlook-app/data/snapshot.json`，将现有页面、作品和历史评论迁移到数据库。
+首次启动后，可在 `crowlook-admin` 的“页面装修”中导入 `crowlook-app/data/snapshot.json`，将现有页面、作品和历史评论迁移到数据库；后续运营均可通过可视化后台完成。
 
 ## 项目结构
 
 ```text
 ruoyi-admin/       Spring Boot 启动模块、控制器与运行配置
 ruoyi-framework/   安全认证、Web、数据权限和基础框架配置
-ruoyi-system/      系统业务以及 Crowlook 作品、分类、页面、评论领域
+ruoyi-system/      系统业务以及 Crowlook 作品、分类、页面、评论、点赞与用户端设置领域
 ruoyi-common/      通用模型、注解、工具和公共依赖
 ruoyi-generator/   代码生成模块源码（当前未装配）
 ruoyi-quartz/      定时任务模块源码（当前未装配）

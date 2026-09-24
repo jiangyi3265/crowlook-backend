@@ -35,9 +35,12 @@ public interface ICrowlookContentService
     int deleteCommentByIds(Long[] commentIds);
 
     Map<String, Object> selectOverview();
+    Map<String, Object> getSiteSettings();
+    int updateSiteSettings(Map<String, Object> settings, String username);
     Map<String, Integer> importSnapshot(Map<String, Object> snapshot, String username);
     Map<String, Object> getPublicCategories();
     Map<String, Object> getPublicPage(String pageKey, Long pageId);
     Map<String, Object> getPublicPosts(Long categoryId, String keyword, Integer page, Integer pageSize);
     Map<String, Object> getPublicPost(Long postId);
+    Map<String, Object> setPublicFavorite(Long postId, String deviceKey, boolean active);
 }

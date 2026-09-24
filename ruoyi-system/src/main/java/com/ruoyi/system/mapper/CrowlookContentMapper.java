@@ -37,10 +37,13 @@ public interface CrowlookContentMapper
 
     List<CrowlookPage> selectPageList(CrowlookPage page);
     CrowlookPage selectPageById(Long pageId);
+    CrowlookPage selectPageByKey(@Param("pageKey") String pageKey);
     CrowlookPage selectPublishedPage(@Param("pageKey") String pageKey, @Param("pageId") Long pageId);
     int insertPage(CrowlookPage page);
     int updatePage(CrowlookPage page);
     int upsertPage(CrowlookPage page);
+    int updatePageConfig(@Param("pageId") Long pageId, @Param("configJson") String configJson,
+            @Param("username") String username);
     int deletePageByIds(Long[] pageIds);
 
     List<CrowlookComment> selectCommentList(CrowlookComment comment);
@@ -50,6 +53,11 @@ public interface CrowlookContentMapper
     int updateComment(CrowlookComment comment);
     int upsertComment(CrowlookComment comment);
     int deleteCommentByIds(Long[] commentIds);
+
+    int insertFavorite(@Param("postId") Long postId, @Param("deviceKey") String deviceKey);
+    int deleteFavorite(@Param("postId") Long postId, @Param("deviceKey") String deviceKey);
+    int changePostFavoriteCount(@Param("postId") Long postId, @Param("delta") int delta);
+    int deleteFavoritesByPostIds(Long[] postIds);
 
     Map<String, Object> selectOverview();
 }
