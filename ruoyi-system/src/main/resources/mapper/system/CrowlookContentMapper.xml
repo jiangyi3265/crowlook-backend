@@ -320,6 +320,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>
             <if test="postId != null">and cm.post_id=#{postId}</if>
             <if test="nickname != null and nickname != ''">and cm.nickname like concat('%', #{nickname}, '%')</if>
+            <if test="content != null and content != ''">
+                and (cm.content like concat('%', #{content}, '%')
+                    or cm.nickname like concat('%', #{content}, '%')
+                    or p.post_title like concat('%', #{content}, '%'))
+            </if>
             <if test="status != null and status != ''">and cm.status=#{status}</if>
         </where>
         order by cm.create_time desc, cm.comment_id desc

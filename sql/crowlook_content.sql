@@ -140,8 +140,8 @@ INSERT IGNORE INTO sys_menu VALUES
   (2000, '内容运营', 0, 1, 'crowlook', NULL, '', '', 1, 0, 'M', '0', '0', '', 'picture', 'admin', NOW(), '', NULL, 'Crowlook 三端内容运营'),
   (2001, '作品管理', 2000, 1, 'post', 'crowlook/post/index', '', 'CrowlookPost', 1, 0, 'C', '0', '0', 'crowlook:post:list', 'documentation', 'admin', NOW(), '', NULL, ''),
   (2002, '分类管理', 2000, 2, 'category', 'crowlook/category/index', '', 'CrowlookCategory', 1, 0, 'C', '0', '0', 'crowlook:category:list', 'tree-table', 'admin', NOW(), '', NULL, ''),
-  (2003, '页面编排', 2000, 3, 'page', 'crowlook/page/index', '', 'CrowlookPage', 1, 0, 'C', '0', '0', 'crowlook:page:list', 'edit', 'admin', NOW(), '', NULL, ''),
-  (2004, '评论审核', 2000, 4, 'comment', 'crowlook/comment/index', '', 'CrowlookComment', 1, 0, 'C', '0', '0', 'crowlook:comment:list', 'message', 'admin', NOW(), '', NULL, '');
+  (2003, '页面装修', 2000, 3, 'page', 'crowlook/page/index', '', 'CrowlookPage', 1, 0, 'C', '0', '0', 'crowlook:page:list', 'edit', 'admin', NOW(), '', NULL, ''),
+  (2004, '评论中心', 2000, 4, 'comment', 'crowlook/comment/index', '', 'CrowlookComment', 1, 0, 'C', '0', '0', 'crowlook:comment:list', 'message', 'admin', NOW(), '', NULL, '');
 
 INSERT IGNORE INTO sys_menu VALUES
   (2101, '作品查询', 2001, 1, '', '', '', '', 1, 0, 'F', '0', '0', 'crowlook:post:query', '#', 'admin', NOW(), '', NULL, ''),
